@@ -2,6 +2,13 @@
 
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
+const { fetchPrice } = require('./helpers'); // Import fetchPrice from helpers.js
+
+// Configuration
+const config = require('./settings/price-checker-settings'); // Updated path to the settings file
+const dataFilePath = path.join(__dirname, '../output/prices.json'); // Updated to use the output folder
 
 // Function to fetch prices using web scraping
 async function fetchPrice(url, selector) {
@@ -47,6 +54,52 @@ function extractPrice(priceText) {
         throw new Error(`Failed to extract price: ${error.message}`);
     }
 }
+
+// Main function
+async function checkPrices() {
+    let previousData = {};
+    if (fs.existsSync(dataFilePath)) {
+        previousData = JSON.parse(fs.readFileSync(dataFilePath, 'utf-8'));
+    }
+
+    const currentDate = new Date().toISOString().split('T')[0];
+    const newData = { ...previousData }; // Start with the existing data
+
+    for (const [product, stores] of Object.entries(config.products)) {
+        for (const { store, url, selector } of stores) {
+            try {
+                const price = await fetchPrice(url, selector);
+                const key = `${store} - ${product}`; // Unique key for each store-product combination
+
+                // If the product already exists, append the new price to its history
+                if (!newData[key]) {
+                    newData[key] = [];
+                }
+
+                newData[key].push({ date: currentDate, price });
+
+                console.log(`Fetched price for ${key}: ${price}`);
+            } catch (error) {
+                console.error(`Failed to fetch price for ${store} - ${product}:`, error.message);
+            }
+        }
+    }
+
+    // Ensure the output folder exists
+    const outputDir = path.dirname(dataFilePath);
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    // Write the updated data back to the file
+    fs.writeFileSync(dataFilePath, JSON.stringify(newData, null, 2));
+    console.log('Prices updated successfully.');
+}
+
+// Run the script
+checkPrices().catch((error) => {
+    console.error('Error running the price checker:', error.message);
+});
 
 module.exports = {
     fetchPrice,
