@@ -1,16 +1,54 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
+const cheerio = require('cheerio');
 
 // Configuration
-const config = require('./config/price-checker-config'); // Links and other settings
+const config = require('./settings/price-checker-settings'); // Updated path to the settings file
 const dataFilePath = path.join(__dirname, '../output/prices.json'); // Updated to use the output folder
 
-// Helper to fetch prices (mock implementation)
-async function fetchPrice(url) {
-    // Replace this with actual logic to scrape or fetch the price
-    const response = await axios.get(url);
-    return parseFloat(response.data.price); // Assuming the API returns a price field
+// Helper to fetch prices using web scraping
+async function fetchPrice(url, selector) {
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            },
+        }); // Fetch the HTML content of the webpage
+        const $ = cheerio.load(response.data); // Load the HTML into Cheerio
+        const priceText = $(selector).text().trim(); // Extract the price using the CSS selector
+        const price = extractPrice(priceText); // Use the new extractPrice function
+        if (isNaN(price)) {
+            throw new Error(`Unable to parse price from selector: ${selector}`);
+        }
+        return price;
+    } catch (error) {
+        throw new Error(`Failed to fetch price from ${url}: ${error.message}`);
+    }
+}
+
+function extractPrice(priceText) {
+    try {
+        // Remove non-numeric characters except for dots and commas
+        let normalizedText = priceText.replace(/[^\d.,]/g, '').trim();
+
+        // If there's a comma, split the string and take only the part before the comma
+        if (normalizedText.includes(',')) {
+            normalizedText = normalizedText.split(',')[0];
+        }
+
+        // Parse the remaining part as an integer
+        const price = parseInt(normalizedText, 10);
+
+        // Check if the parsed price is valid
+        if (isNaN(price)) {
+            throw new Error(`Invalid price format: "${priceText}"`);
+        }
+
+        return price;
+    } catch (error) {
+        throw new Error(`Failed to extract price: ${error.message}`);
+    }
 }
 
 // Main function
@@ -23,22 +61,25 @@ async function checkPrices() {
     const currentDate = new Date().toISOString().split('T')[0];
     const newData = {};
 
-    for (const { store, url } of config.links) {
-        try {
-            const price = await fetchPrice(url);
-            newData[store] = { date: currentDate, price };
+    for (const [product, stores] of Object.entries(config.products)) {
+        for (const { store, url, selector } of stores) {
+            try {
+                const price = await fetchPrice(url, selector);
+                const key = `${store} - ${product}`; // Unique key for each store-product combination
+                newData[key] = { date: currentDate, price };
 
-            if (previousData[store] && previousData[store].price !== price) {
-                console.log(
-                    `Price changed for ${store}: ${previousData[store].price} -> ${price}`
-                );
-                // Commented out SMS and email notifications for now
-                // await sendNotifications(store, previousData[store].price, price);
-            } else if (!previousData[store]) {
-                console.log(`First run for ${store}, price: ${price}`);
+                if (previousData[key] && previousData[key].price !== price) {
+                    console.log(
+                        `Price changed for ${key}: ${previousData[key].price} -> ${price}`
+                    );
+                    // Commented out SMS and email notifications for now
+                    // await sendNotifications(key, previousData[key].price, price);
+                } else if (!previousData[key]) {
+                    console.log(`First run for ${key}, price: ${price}`);
+                }
+            } catch (error) {
+                console.error(`Failed to fetch price for ${store} - ${product}:`, error.message);
             }
-        } catch (error) {
-            console.error(`Failed to fetch price for ${store}:`, error.message);
         }
     }
 
