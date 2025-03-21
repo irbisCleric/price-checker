@@ -1,3 +1,10 @@
+const path = require('path');
+
+const outputFileName = 'prices.json';
+const outputDataFilePath = path.join(__dirname, '../../output', outputFileName);
+
+const googleDriveFolderId = ''; // Folder ID on Google Drive
+
 const config = {
     products: {
         'Synology DS423+': [
@@ -44,4 +51,9 @@ const config = {
     },
 };
 
-module.exports = config;
+module.exports = {
+    config,
+    outputFileName,
+    googleDriveFolderId,
+    outputDataFilePath,
+};

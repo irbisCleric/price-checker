@@ -4,18 +4,18 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
-const { fetchPrice } = require('./helpers'); // Import fetchPrice from helpers.js
+const {uploadFileToFolder} = require('./googleDriveHelper'); // Import the uploadFileToFolder function
 
 // Configuration
-const config = require('./settings/price-checker-settings'); // Updated path to the settings file
-const dataFilePath = path.join(__dirname, '../output/prices.json'); // Updated to use the output folder
+const {config, googleDriveFolderId, outputDataFilePath} = require('./../settings/price-checker-settings'); // Updated path to the settings file
 
 // Function to fetch prices using web scraping
 async function fetchPrice(url, selector) {
     try {
         const response = await axios.get(url, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             },
         }); // Fetch the HTML content of the webpage
         const $ = cheerio.load(response.data); // Load the HTML into Cheerio
@@ -55,11 +55,11 @@ function extractPrice(priceText) {
     }
 }
 
-// Main function
-async function checkPrices() {
+// Main function to check prices
+async function checkPrices(fileName) {
     let previousData = {};
-    if (fs.existsSync(dataFilePath)) {
-        previousData = JSON.parse(fs.readFileSync(dataFilePath, 'utf-8'));
+    if (fs.existsSync(outputDataFilePath)) {
+        previousData = JSON.parse(fs.readFileSync(outputDataFilePath, 'utf-8'));
     }
 
     const currentDate = new Date().toISOString().split('T')[0];
@@ -86,22 +86,22 @@ async function checkPrices() {
     }
 
     // Ensure the output folder exists
-    const outputDir = path.dirname(dataFilePath);
+    const outputDir = path.dirname(outputDataFilePath);
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
     // Write the updated data back to the file
-    fs.writeFileSync(dataFilePath, JSON.stringify(newData, null, 2));
+    fs.writeFileSync(outputDataFilePath, JSON.stringify(newData, null, 2));
     console.log('Prices updated successfully.');
-}
 
-// Run the script
-checkPrices().catch((error) => {
-    console.error('Error running the price checker:', error.message);
-});
+    // Upload the updated file to Google Drive
+    console.log(`Uploading ${fileName} to Google Drive...`);
+    await uploadFileToFolder(outputDataFilePath, fileName, googleDriveFolderId);
+}
 
 module.exports = {
     fetchPrice,
     extractPrice,
+    checkPrices
 };
