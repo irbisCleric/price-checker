@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { fetchPrice } = require('./helpers'); // Import fetchPrice from helpers.js
+const { fetchPrice } = require('./utils/helpers'); // Import fetchPrice from helpers.js
 
 // Configuration
 const config = require('./settings/price-checker-settings'); // Updated path to the settings file
