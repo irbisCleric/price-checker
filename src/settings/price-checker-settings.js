@@ -2,8 +2,6 @@ const path = require('path');
 const outputFileName = 'prices.json';
 const outputDataFilePath = path.join(__dirname, '../../output', outputFileName);
 
-const googleDriveFolderId = ''; // Folder ID on Google Drive
-
 const config = {
     products: {
         'Synology DS423+': [
@@ -36,17 +34,6 @@ const config = {
                 selector: '.a-price-whole',
             },
         ],
-    },
-    twilio: {
-        accountSid: 'your_account_sid',
-        authToken: 'your_auth_token',
-        from: '+1234567890',
-        to: '+0987654321',
-    },
-    email: {
-        user: 'your_email@gmail.com',
-        pass: 'your_email_password',
-        to: 'recipient_email@gmail.com',
     },
 };
 

@@ -4,10 +4,13 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
-const {uploadFileToFolder} = require('./googleDriveHelper'); // Import the uploadFileToFolder function
+const { uploadFileToFolder } = require('./googleDriveHelper'); // Import the uploadFileToFolder function
 
 // Configuration
-const {config, googleDriveFolderId, outputDataFilePath} = require('./../settings/price-checker-settings'); // Updated path to the settings file
+const {
+    config,
+    outputDataFilePath,
+} = require('./../settings/price-checker-settings'); // Updated path to the settings file
 
 // Function to fetch prices using web scraping
 async function fetchPrice(url, selector) {
@@ -56,7 +59,7 @@ function extractPrice(priceText) {
 }
 
 // Main function to check prices
-async function checkPrices(fileName) {
+async function checkPrices(fileName, gdFolderID) {
     let previousData = {};
     if (fs.existsSync(outputDataFilePath)) {
         previousData = JSON.parse(fs.readFileSync(outputDataFilePath, 'utf-8'));
@@ -80,7 +83,10 @@ async function checkPrices(fileName) {
 
                 console.log(`Fetched price for ${key}: ${price}`);
             } catch (error) {
-                console.error(`Failed to fetch price for ${store} - ${product}:`, error.message);
+                console.error(
+                    `Failed to fetch price for ${store} - ${product}:`,
+                    error.message
+                );
             }
         }
     }
@@ -97,11 +103,11 @@ async function checkPrices(fileName) {
 
     // Upload the updated file to Google Drive
     console.log(`Uploading ${fileName} to Google Drive...`);
-    await uploadFileToFolder(outputDataFilePath, fileName, googleDriveFolderId);
+    await uploadFileToFolder(outputDataFilePath, fileName, gdFolderID);
 }
 
 module.exports = {
     fetchPrice,
     extractPrice,
-    checkPrices
+    checkPrices,
 };

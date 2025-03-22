@@ -1,0 +1,39 @@
+name: Price Checker
+
+on:
+    workflow_dispatch: # Allows manual triggering of the workflow
+    schedule:
+        - cron: '0 0 * * *' # Runs daily at midnight UTC
+
+jobs:
+    price-checker:
+        runs-on: ubuntu-latest
+
+        steps:
+            # Step 1: Checkout the repository
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            # Step 2: Set up Node.js
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '22' # Use Node.js 22
+
+            # Step 3: Install dependencies
+            - name: Install dependencies
+              run: npm install
+
+            # Step 4: Set up environment variables
+            - name: Set up environment variables
+              env:
+                  GCLOUD_CREDENTIALS: ${{ secrets.GCLOUD_CREDENTIALS }}
+                  GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+              run: echo "Environment variables set."
+
+            # Step 5: Run the price checker script
+            - name: Run Price Checker
+              env:
+                  GCLOUD_CREDENTIALS: ${{ secrets.GCLOUD_CREDENTIALS }}
+                  GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+              run: node src/index.js

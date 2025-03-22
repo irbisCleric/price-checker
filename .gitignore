@@ -32,3 +32,6 @@ src/prices.json
 
 # Output folder
 output/
+
+# Config files
+src/settings/secrets.js

@@ -2,25 +2,25 @@ const { google } = require('googleapis');
 const fs = require('fs');
 const path = require('path');
 
-// Path to your service account key file
-const KEYFILEPATH = path.join(__dirname, '../settings/gcloud_credentials.json');
+// Load Google Cloud credentials from an environment variable
+const credentials = JSON.parse(process.env.GCLOUD_CREDENTIALS);
 
 // Scopes for Google Drive API
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
 // Authenticate with Google Drive API
 const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
+    credentials,
     scopes: SCOPES,
 });
 
 const drive = google.drive({ version: 'v3', auth });
 
 // Search for a file in a specific folder
-async function findFileInFolder(folderId, fileName) {
+async function findFileInFolder(gdFolderID, fileName) {
     try {
         const response = await drive.files.list({
-            q: `'${folderId}' in parents and name='${fileName}'`,
+            q: `'${gdFolderID}' in parents and name='${fileName}'`,
             fields: 'files(id, name)',
         });
 
@@ -38,7 +38,6 @@ async function findFileInFolder(folderId, fileName) {
 // Download a file from Google Drive
 async function downloadFile(fileId, destinationPath) {
     try {
-        // Ensure the output folder exists
         const outputDir = path.dirname(destinationPath);
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, { recursive: true });
@@ -65,30 +64,35 @@ async function downloadFile(fileId, destinationPath) {
             });
         });
     } catch (error) {
-        console.error(`Error downloading file with ID ${fileId}:`, error.message);
+        console.error(
+            `Error downloading file with ID ${fileId}:`,
+            error.message
+        );
         throw error;
     }
 }
 
 // Upload a file to a specific folder on Google Drive
-async function uploadFileToFolder(filePath, fileName, folderId) {
+async function uploadFileToFolder(filePath, fileName, gdFolderID) {
     try {
         const fileMetadata = {
-            name: fileName, // Name of the file on Google Drive
-            parents: [folderId], // Specify the folder ID
+            name: fileName,
+            parents: [gdFolderID],
         };
         const media = {
             mimeType: 'application/json',
-            body: fs.createReadStream(filePath), // Read the file from the local filesystem
+            body: fs.createReadStream(filePath),
         };
 
         const response = await drive.files.create({
             resource: fileMetadata,
             media: media,
-            fields: 'id', // Return the file ID
+            fields: 'id',
         });
 
-        console.log(`File uploaded to Google Drive with ID: ${response.data.id}`);
+        console.log(
+            `File uploaded to Google Drive with ID: ${response.data.id}`
+        );
         return response.data.id;
     } catch (error) {
         console.error('Error uploading file to Google Drive:', error.message);
