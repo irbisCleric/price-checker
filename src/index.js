@@ -14,7 +14,7 @@ async function initializePricesFile(fileName, gdFolderID) {
     // Check if the file exists in the specified folder on Google Drive
     const file = await findFileInFolder(gdFolderID, fileName);
     if (file) {
-        console.log(`Found ${fileName} on Google Drive. Downloading...`);
+        console.log(`Found file on Google Drive. Downloading...`);
         await downloadFile(
             file.id,
             path.join(__dirname, '../output', outputFileName)

@@ -45,14 +45,14 @@ async function checkAuth() {
 async function findFileInFolder(gdFolderID, fileName) {
     try {
         if (!gdFolderID) {
-            console.error('Invalid folder ID: gdFolderID is required.');
+            console.error('Invalid folder ID');
         }
 
         if (typeof fileName === 'string') {
             console.debug('File name has string value');
         }
 
-        console.log('Searching for file:', fileName, 'in folder:', gdFolderID);
+        console.log('Searching for file in folder on Google Drive...');
 
         const escapedFileName = fileName.replace(/'/g, "\\'");
         const response = await drive.files.list({
@@ -62,7 +62,7 @@ async function findFileInFolder(gdFolderID, fileName) {
 
         const files = response.data.files;
         if (files.length > 0) {
-            console.log(`Found file: ${files[0].name} with ID: ${files[0].id}`);
+            console.log('Found file on Google Drive!');
             return files[0]; // Return the first matching file
         }
         console.log('File not found.');
@@ -79,7 +79,7 @@ async function downloadFile(fileId, destinationPath) {
         const outputDir = path.dirname(destinationPath);
         if (!fs.existsSync(outputDir)) {
             fs.mkdirSync(outputDir, { recursive: true });
-            console.log(`Created output directory: ${outputDir}`);
+            console.log('Created output directory: ${outputDir}');
         }
 
         const dest = fs.createWriteStream(destinationPath);
@@ -93,7 +93,7 @@ async function downloadFile(fileId, destinationPath) {
 
         return new Promise((resolve, reject) => {
             dest.on('finish', () => {
-                console.log(`File downloaded to ${destinationPath}`);
+                console.log('File downloaded into output directory.');
                 resolve();
             });
             dest.on('error', (err) => {
@@ -103,7 +103,7 @@ async function downloadFile(fileId, destinationPath) {
         });
     } catch (error) {
         console.error(
-            `Error downloading file with ID ${fileId}:`,
+            'Error downloading file from Google Drive:',
             error.message
         );
         throw error;
@@ -132,9 +132,7 @@ async function uploadFileToFolder(filePath, fileName, gdFolderID) {
                 fileId: existingFile.id,
                 media: media,
             });
-            console.log(
-                `File updated on Google Drive with ID: ${response.data.id}`
-            );
+            console.log('File updated on Google Drive');
         } else {
             // Create a new file
             response = await drive.files.create({
@@ -142,9 +140,7 @@ async function uploadFileToFolder(filePath, fileName, gdFolderID) {
                 media: media,
                 fields: 'id',
             });
-            console.log(
-                `File uploaded to Google Drive with ID: ${response.data.id}`
-            );
+            console.log('Created file on Google Drive');
         }
 
         return response.data.id;

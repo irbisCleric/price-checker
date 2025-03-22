@@ -13,23 +13,45 @@ const {
 } = require('./../settings/price-checker-settings'); // Updated path to the settings file
 
 // Function to fetch prices using web scraping
-async function fetchPrice(url, selector) {
-    try {
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            },
-        }); // Fetch the HTML content of the webpage
-        const $ = cheerio.load(response.data); // Load the HTML into Cheerio
-        const priceText = $(selector).text().trim(); // Extract the price using the CSS selector
-        const price = extractPrice(priceText); // Use the extractPrice function
-        if (isNaN(price)) {
-            throw new Error(`Unable to parse price from selector: ${selector}`);
+async function fetchPrice(url, selector, maxRetries = 3, retryDelay = 2000) {
+    let attempts = 0;
+
+    while (attempts < maxRetries) {
+        try {
+            attempts++;
+            console.log(`Attempt ${attempts} to fetch price from ${url}`);
+
+            const response = await axios.get(url, {
+                headers: {
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                },
+            }); // Fetch the HTML content of the webpage
+
+            const $ = cheerio.load(response.data); // Load the HTML into Cheerio
+            const priceText = $(selector).text().trim(); // Extract the price using the CSS selector
+            const price = extractPrice(priceText); // Use the extractPrice function
+
+            if (isNaN(price)) {
+                throw new Error(
+                    `Unable to parse price from selector: ${selector}`
+                );
+            }
+
+            return price; // Return the price if successful
+        } catch (error) {
+            if (attempts >= maxRetries || error.response?.status !== 503) {
+                // If max retries reached or error is not 503, throw the error
+                throw new Error(
+                    `Failed to fetch price from ${url} after ${attempts} attempts: ${error.message}`
+                );
+            }
+
+            console.warn(
+                `Attempt ${attempts} failed with status ${error.response?.status}. Retrying in ${retryDelay}ms...`
+            );
+            await new Promise((resolve) => setTimeout(resolve, retryDelay)); // Wait before retrying
         }
-        return price;
-    } catch (error) {
-        throw new Error(`Failed to fetch price from ${url}: ${error.message}`);
     }
 }
 
@@ -72,7 +94,7 @@ function doesPriceEntryExist(filePath, productName, date, price) {
             (entry) => entry.date === date && entry.price === price
         );
     } catch (error) {
-        console.error('Error reading or parsing prices.json:', error.message);
+        console.error('Error reading or parsing output file', error.message);
         throw error;
     }
 }
@@ -135,7 +157,7 @@ async function checkPrices(fileName, gdFolderID) {
     console.log('Prices updated successfully.');
 
     // Upload the updated file to Google Drive
-    console.log(`Uploading ${fileName} to Google Drive...`);
+    console.log(`Uploading file to Google Drive...`);
     await uploadFileToFolder(outputDataFilePath, fileName, gdFolderID);
 }
 
