@@ -18,20 +18,13 @@ jobs:
             - name: Set up Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: '22' # Use Node.js 22
+                  node-version: '20' # Use Node.js 20 LTS
 
             # Step 3: Install dependencies
             - name: Install dependencies
               run: npm install
 
-            # Step 4: Set up environment variables
-            - name: Set up environment variables
-              env:
-                  GCLOUD_CREDENTIALS: ${{ secrets.GCLOUD_CREDENTIALS }}
-                  GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-              run: echo "Environment variables set."
-
-            # Step 5: Run the price checker script
+            # Step 4: Run the price checker script
             - name: Run Price Checker
               env:
                   GCLOUD_CREDENTIALS: ${{ secrets.GCLOUD_CREDENTIALS }}

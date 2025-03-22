@@ -48,8 +48,8 @@ async function findFileInFolder(gdFolderID, fileName) {
             console.error('Invalid folder ID: gdFolderID is required.');
         }
 
-        if (typeof fileName !== 'string' || fileName.length === 0) {
-            console.error('Invalid file name: fileName is required.');
+        if (typeof fileName === 'string') {
+            console.debug('File name has string value');
         }
 
         console.log('Searching for file:', fileName, 'in folder:', gdFolderID);
