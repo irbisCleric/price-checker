@@ -12,7 +12,9 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 
 // Authenticate with Google Drive API
 const auth = new google.auth.GoogleAuth({
-    keyFile: credentials,
+    credentials: {
+        ...credentials,
+    },
     scopes: SCOPES,
 });
 
@@ -77,6 +79,9 @@ async function downloadFile(fileId, destinationPath) {
 // Upload a file to a specific folder on Google Drive
 async function uploadFileToFolder(filePath, fileName, gdFolderID) {
     try {
+        // Check if the file already exists in the folder
+        const existingFile = await findFileInFolder(gdFolderID, fileName);
+
         const fileMetadata = {
             name: fileName,
             parents: [gdFolderID],
@@ -86,15 +91,28 @@ async function uploadFileToFolder(filePath, fileName, gdFolderID) {
             body: fs.createReadStream(filePath),
         };
 
-        const response = await drive.files.create({
-            resource: fileMetadata,
-            media: media,
-            fields: 'id',
-        });
+        let response;
+        if (existingFile) {
+            // Update the existing file
+            response = await drive.files.update({
+                fileId: existingFile.id,
+                media: media,
+            });
+            console.log(
+                `File updated on Google Drive with ID: ${response.data.id}`
+            );
+        } else {
+            // Create a new file
+            response = await drive.files.create({
+                resource: fileMetadata,
+                media: media,
+                fields: 'id',
+            });
+            console.log(
+                `File uploaded to Google Drive with ID: ${response.data.id}`
+            );
+        }
 
-        console.log(
-            `File uploaded to Google Drive with ID: ${response.data.id}`
-        );
         return response.data.id;
     } catch (error) {
         console.error('Error uploading file to Google Drive:', error.message);

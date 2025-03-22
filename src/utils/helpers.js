@@ -58,6 +58,25 @@ function extractPrice(priceText) {
     }
 }
 
+// Helper function to check if an object with the same date and price exists
+function doesPriceEntryExist(filePath, productName, date, price) {
+    try {
+        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+        if (!data[productName]) {
+            return false; // Product does not exist in the file
+        }
+
+        const entries = data[productName];
+        return entries.some(
+            (entry) => entry.date === date && entry.price === price
+        );
+    } catch (error) {
+        console.error('Error reading or parsing prices.json:', error.message);
+        throw error;
+    }
+}
+
 // Main function to check prices
 async function checkPrices(fileName, gdFolderID) {
     let previousData = {};
@@ -79,7 +98,21 @@ async function checkPrices(fileName, gdFolderID) {
                     newData[key] = [];
                 }
 
-                newData[key].push({ date: currentDate, price });
+                // Prevent duplicate entries for the same date and price
+                if (
+                    !doesPriceEntryExist(
+                        outputDataFilePath,
+                        key,
+                        currentDate,
+                        price
+                    )
+                ) {
+                    newData[key].push({ date: currentDate, price });
+                } else {
+                    console.log(
+                        `Price for ${key} on ${currentDate} already exists: ${price}`
+                    );
+                }
 
                 console.log(`Fetched price for ${key}: ${price}`);
             } catch (error) {
@@ -110,4 +143,5 @@ module.exports = {
     fetchPrice,
     extractPrice,
     checkPrices,
+    doesPriceEntryExist,
 };
