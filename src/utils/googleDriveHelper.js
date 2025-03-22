@@ -45,11 +45,11 @@ async function checkAuth() {
 async function findFileInFolder(gdFolderID, fileName) {
     try {
         if (!gdFolderID) {
-            throw new Error('Invalid folder ID: gdFolderID is required.');
+            console.error('Invalid folder ID: gdFolderID is required.');
         }
 
         if (typeof fileName !== 'string' || fileName.length === 0) {
-            throw new Error('Invalid file name: fileName is required.');
+            console.error('Invalid file name: fileName is required.');
         }
 
         console.log('Searching for file:', fileName, 'in folder:', gdFolderID);
