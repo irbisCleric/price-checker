@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Path to your service account key file
-const KEYFILEPATH = path.join(__dirname, '../../credentials.json');
+const KEYFILEPATH = path.join(__dirname, '../settings/gcloud_credentials.json');
 
 // Scopes for Google Drive API
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
