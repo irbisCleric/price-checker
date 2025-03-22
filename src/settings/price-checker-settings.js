@@ -40,6 +40,5 @@ const config = {
 module.exports = {
     config,
     outputFileName,
-    googleDriveFolderId,
     outputDataFilePath,
 };
