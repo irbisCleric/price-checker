@@ -20,6 +20,27 @@ const auth = new google.auth.GoogleAuth({
 
 const drive = google.drive({ version: 'v3', auth });
 
+// Check if authentication is successful
+async function checkAuth() {
+    try {
+        await auth.getClient(); // Attempt to get a valid client
+        console.log('Authentication successful.');
+    } catch (error) {
+        console.error('Authentication failed:', error.message);
+        throw new Error('Failed to authenticate with Google Drive API.');
+    }
+}
+
+// Ensure authentication is checked before any operations
+(async () => {
+    try {
+        await checkAuth();
+    } catch (error) {
+        console.error('Exiting due to authentication error:', error.message);
+        process.exit(1); // Exit the process if authentication fails
+    }
+})();
+
 // Search for a file in a specific folder
 async function findFileInFolder(gdFolderID, fileName) {
     try {
