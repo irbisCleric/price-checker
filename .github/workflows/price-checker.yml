@@ -3,7 +3,7 @@ name: Price Checker
 on:
     workflow_dispatch: # Allows manual triggering of the workflow
     schedule:
-        - cron: '30 17 * * *' # Запускається о 17:29 UTC (18:30 AMS time)
+        - cron: '*/5 * * * *'
 
 jobs:
     price-checker:
