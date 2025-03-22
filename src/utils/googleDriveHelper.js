@@ -4,7 +4,7 @@ const path = require('path');
 
 // Load Google Cloud credentials from an environment variable
 const credentials =
-    process.env.GCLOUD_CREDENTIALS ||
+    JSON.parse(process.env.GCLOUD_CREDENTIALS) ||
     require('./../settings/secrets').GCLOUD_CREDENTIALS;
 
 // Scopes for Google Drive API
