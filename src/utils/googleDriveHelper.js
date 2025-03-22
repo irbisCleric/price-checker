@@ -23,15 +23,18 @@ const drive = google.drive({ version: 'v3', auth });
 // Search for a file in a specific folder
 async function findFileInFolder(gdFolderID, fileName) {
     try {
+        console.log('Searching for file:', fileName, 'in folder:', gdFolderID);
         const response = await drive.files.list({
-            q: `'${gdFolderID}' in parents and name='${fileName}'`,
+            q: `'${gdFolderID}' in parents and name='${fileName.replace(/'/g, "\\'")}'`,
             fields: 'files(id, name)',
         });
 
         const files = response.data.files;
         if (files.length > 0) {
+            console.log(`Found file: ${files[0].name} with ID: ${files[0].id}`);
             return files[0]; // Return the first matching file
         }
+        console.log('File not found.');
         return null; // File not found
     } catch (error) {
         console.error('Error finding file in folder:', error.message);
