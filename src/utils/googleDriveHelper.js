@@ -44,9 +44,19 @@ async function checkAuth() {
 // Search for a file in a specific folder
 async function findFileInFolder(gdFolderID, fileName) {
     try {
+        if (!gdFolderID) {
+            throw new Error('Invalid folder ID: gdFolderID is required.');
+        }
+
+        if (typeof fileName !== 'string' || fileName.length === 0) {
+            throw new Error('Invalid file name: fileName is required.');
+        }
+
         console.log('Searching for file:', fileName, 'in folder:', gdFolderID);
+
+        const escapedFileName = fileName.replace(/'/g, "\\'");
         const response = await drive.files.list({
-            q: `'${gdFolderID}' in parents and name='${fileName.replace(/'/g, "\\'")}'`,
+            q: `'${gdFolderID}' in parents and name='${escapedFileName}'`,
             fields: 'files(id, name)',
         });
 
