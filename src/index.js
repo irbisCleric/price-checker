@@ -1,8 +1,9 @@
+const path = require('path');
 const { checkPrices } = require('./utils/helpers'); // Import fetchPrice from helpers.js
 const { findFileInFolder, downloadFile } = require('./utils/googleDriveHelper'); // Import Google Drive helpers
 
 // Configuration
-const {outputFileName, googleDriveFolderId, outputDataFilePath} = require('./settings/price-checker-settings'); // Path to the settings file
+const {outputFileName, googleDriveFolderId} = require('./settings/price-checker-settings'); // Path to the settings file
 
 // Download the prices.json file from Google Drive
 async function initializePricesFile(fileName) {
@@ -10,11 +11,11 @@ async function initializePricesFile(fileName) {
     const file = await findFileInFolder(googleDriveFolderId, fileName);
     if (file) {
         console.log(`Found ${fileName} on Google Drive. Downloading...`);
-        await downloadFile(file.id, outputDataFilePath);
-    } else {
-        console.log(`${fileName} not found on Google Drive. Starting fresh.`);
-        await checkPrices(outputFileName); // Check prices and update the file
+        await downloadFile(file.id, path.join(__dirname, '../output', outputFileName));
     }
+
+    console.log('Check prices and update the file');
+    await checkPrices(outputFileName); // Check prices and update the file
 }
 
 // Run the script

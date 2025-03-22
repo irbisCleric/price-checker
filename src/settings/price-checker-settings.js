@@ -1,5 +1,4 @@
 const path = require('path');
-
 const outputFileName = 'prices.json';
 const outputDataFilePath = path.join(__dirname, '../../output', outputFileName);
 

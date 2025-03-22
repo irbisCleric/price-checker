@@ -38,6 +38,13 @@ async function findFileInFolder(folderId, fileName) {
 // Download a file from Google Drive
 async function downloadFile(fileId, destinationPath) {
     try {
+        // Ensure the output folder exists
+        const outputDir = path.dirname(destinationPath);
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+            console.log(`Created output directory: ${outputDir}`);
+        }
+
         const dest = fs.createWriteStream(destinationPath);
 
         const response = await drive.files.get(
