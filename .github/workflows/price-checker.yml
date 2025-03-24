@@ -4,6 +4,7 @@ on:
     workflow_dispatch: # Allows manual triggering of the workflow
     schedule:
         - cron: '00 07 * * *' # Runs every day at 9:00 AM CET (UTC +1/UTC+2)
+        - cron: '00 15 * * *' # Runs every day at 5:00 PM CET (UTC +1/UTC+2)
 
 jobs:
     price-checker:
